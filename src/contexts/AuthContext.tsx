@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (emailOrUsername: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, username: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => void
+  refreshUser: () => Promise<void>
   loading: boolean
 }
 
@@ -36,6 +37,8 @@ interface AuthProviderProps {
   children: React.ReactNode
 }
 
+import { supabase } from '@/lib/supabase'
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,6 +55,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     setLoading(false)
   }, [])
+
+  const refreshUser = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        const updatedUser = {
+          ...data,
+          created_at: data.created_at || new Date().toISOString()
+        }
+        setUser(updatedUser)
+        localStorage.setItem('insta_user', JSON.stringify(updatedUser))
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error)
+    }
+  }
 
   const login = async (emailOrUsername: string, password: string) => {
     try {
@@ -111,6 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     signup,
     logout,
+    refreshUser,
     loading,
   }
 

@@ -1,12 +1,14 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import EditProfileModal from '@/components/profile/EditProfileModal'
 
 export default function HomePage() {
   const { user, logout, loading } = useAuth()
   const router = useRouter()
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -15,160 +17,152 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
       </div>
     )
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Instagram Clone</h1>
-          <p className="text-lg text-gray-600 mb-8">Share your moments with the world</p>
-          <div className="space-x-4">
-            <Link
-              href="/login"
-              className="inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-block px-6 py-3 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors"
-            >
-              Sign Up
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
+    router.push('/login')
+    return null
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold text-gray-900">Instagram</h1>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.username}
-                    className="h-8 w-8 rounded-full"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-700">
-                      {user.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <span className="text-sm font-medium text-gray-700">{user.username}</span>
-              </div>
-              
+    <div className="min-h-screen bg-black text-white p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-20 mb-10">
+          {/* Profile Image */}
+          <div className="relative group">
+            <div className="w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden border-2 border-zinc-800">
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.username}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                  <span className="text-4xl font-medium text-zinc-500">
+                    {user.username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </div>
+            {/* Note Bubble (Placeholder as seen in screenshot) */}
+            <div className="absolute -top-2 -left-2 bg-zinc-800/90 backdrop-blur-sm px-3 py-1.5 rounded-2xl text-xs border border-zinc-700 shadow-xl hidden md:block">
+              <span className="text-zinc-400 italic">Note...</span>
+              <div className="absolute -bottom-1 left-4 w-2 h-2 bg-zinc-800 border-r border-b border-zinc-700 transform rotate-45"></div>
+            </div>
+          </div>
+
+          {/* User Info */}
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-6">
+              <h2 className="text-2xl font-semibold">{user.username}</h2>
               <button
-                onClick={handleLogout}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="p-1 hover:bg-zinc-800 rounded-full transition-colors"
+                title="Settings"
               >
-                Log out
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" />
+                </svg>
               </button>
             </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <div className="mb-8">
-            {user.avatar_url ? (
-              <img
-                src={user.avatar_url}
-                alt={user.username}
-                className="h-32 w-32 rounded-full mx-auto mb-4"
-              />
-            ) : (
-              <div className="h-32 w-32 rounded-full bg-gray-300 flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl font-medium text-gray-700">
-                  {user.username.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back, {user.full_name || user.username}!
-            </h2>
-            <p className="text-lg text-gray-600 mb-4">@{user.username}</p>
-            {user.bio && (
-              <p className="text-gray-700 max-w-md mx-auto">{user.bio}</p>
-            )}
-          </div>
+            <p className="font-medium mb-4">{user.full_name || user.username}</p>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Your Instagram Clone Dashboard
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="text-lg font-medium text-blue-900 mb-2">Posts</h4>
-                <p className="text-3xl font-bold text-blue-600">0</p>
+            {/* Stats */}
+            <div className="flex items-center justify-center md:justify-start gap-8 mb-6">
+              <div>
+                <span className="font-semibold">0</span> posts
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="text-lg font-medium text-green-900 mb-2">Followers</h4>
-                <p className="text-3xl font-bold text-green-600">0</p>
+              <div>
+                <span className="font-semibold">0</span> followers
               </div>
-              <div className="p-4 bg-purple-50 rounded-lg">
-                <h4 className="text-lg font-medium text-purple-900 mb-2">Following</h4>
-                <p className="text-3xl font-bold text-purple-600">0</p>
+              <div>
+                <span className="font-semibold">0</span> following
               </div>
             </div>
-            
-            <div className="mt-8">
-              <p className="text-gray-600 mb-4">
-                Your account has been successfully created! Start by uploading your first post.
-              </p>
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                Upload Your First Post
-              </button>
-            </div>
-          </div>
 
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
-            <div className="text-left space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Email:</span>
-                <span className="text-gray-900">{user.email}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Username:</span>
-                <span className="text-gray-900">@{user.username}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Account Type:</span>
-                <span className="text-gray-900">{user.is_private ? 'Private' : 'Public'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Verified:</span>
-                <span className={user.is_verified ? 'text-blue-600' : 'text-gray-500'}>
-                  {user.is_verified ? '✓ Verified' : 'Not Verified'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Member Since:</span>
-                <span className="text-gray-900">
-                  {new Date(user.created_at).toLocaleDateString()}
-                </span>
+            {/* Bio Section */}
+            <div className="text-sm space-y-1 max-w-sm mx-auto md:mx-0">
+              {user.bio ? (
+                <div className="whitespace-pre-wrap">{user.bio}</div>
+              ) : (
+                <p className="text-zinc-500 italic">No bio yet</p>
+              )}
+              <div className="flex items-center justify-center md:justify-start gap-1 mt-2 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+                <span className="text-zinc-300">{user.username}</span>
               </div>
             </div>
           </div>
         </div>
-      </main>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col md:flex-row gap-2 max-w-2xl">
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2 rounded-lg transition-colors text-sm"
+          >
+            Edit Profile
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2 rounded-lg transition-colors text-sm"
+          >
+            Log Out
+          </button>
+        </div>
+
+        {/* Post Grid (Empty for now) */}
+        <div className="mt-12 border-t border-zinc-800 pt-8">
+          <div className="flex justify-center gap-12 mb-8">
+            <button className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase border-t border-white -mt-[33px] pt-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" />
+              </svg>
+              Posts
+            </button>
+            <button className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-zinc-500 pt-4 -mt-[33px]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" />
+              </svg>
+              Saved
+            </button>
+            <button className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-zinc-500 pt-4 -mt-[33px]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              Tagged
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1">
+            {/* Empty posts message */}
+            <div className="col-span-3 flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-16 h-16 rounded-full border border-white flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" />
+                </svg>
+              </div>
+              <h3 className="text-3xl font-extrabold mb-2">Share Photos</h3>
+              <p className="text-sm max-w-xs mb-6">When you share photos, they will appear on your profile.</p>
+              <button className="text-blue-500 font-bold hover:text-white transition-colors">
+                Share your first photo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      />
     </div>
   )
 }
