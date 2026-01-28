@@ -31,13 +31,23 @@ CREATE TABLE posts (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Followers table
-CREATE TABLE followers (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    following_id UUID REFERENCES users(id) ON DELETE CASCADE,
+-- UPDATE: Changed from 'followers' to 'follows' to match application logic and added status
+CREATE TABLE follows (
+    follower_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    following_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    status TEXT CHECK (status IN ('pending', 'accepted')) NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(follower_id, following_id)
+    PRIMARY KEY (follower_id, following_id)
+);
+
+-- NEW: Notifications table
+CREATE TABLE notifications (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL, -- The recipient
+    actor_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL, -- The triggerer
+    type TEXT CHECK (type IN ('follow_request', 'follow_accepted', 'follow_started', 'follow_rejected')) NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Likes table
@@ -111,8 +121,9 @@ CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_posts_user_id ON posts(user_id);
 CREATE INDEX idx_posts_created_at ON posts(created_at);
-CREATE INDEX idx_followers_follower_id ON followers(follower_id);
-CREATE INDEX idx_followers_following_id ON followers(following_id);
+CREATE INDEX idx_follows_follower_id ON follows(follower_id);
+CREATE INDEX idx_follows_following_id ON follows(following_id);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX idx_likes_user_id ON likes(user_id);
 CREATE INDEX idx_likes_post_id ON likes(post_id);
 CREATE INDEX idx_comments_post_id ON comments(post_id);
@@ -121,7 +132,8 @@ CREATE INDEX idx_stories_user_id ON stories(user_id);
 -- Row Level Security Policies
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE followers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE stories ENABLE ROW LEVEL SECURITY;
@@ -147,6 +159,36 @@ CREATE POLICY "Posts are visible based on privacy" ON posts
 CREATE POLICY "Users can create own posts" ON posts
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Users can update/delete their own posts
+-- Users can manage own posts
 CREATE POLICY "Users can manage own posts" ON posts
     FOR ALL USING (auth.uid() = user_id);
+
+-- Follows Policies
+CREATE POLICY "Public follows are viewable by everyone"
+  ON follows FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can insert their own follows"
+  ON follows FOR INSERT
+  WITH CHECK (auth.uid() = follower_id);
+
+CREATE POLICY "Users can update their own follows"
+  ON follows FOR UPDATE
+  USING (auth.uid() = follower_id OR auth.uid() = following_id);
+
+CREATE POLICY "Users can delete their own follows"
+  ON follows FOR DELETE
+  USING (auth.uid() = follower_id OR auth.uid() = following_id);
+
+-- Notifications Policies
+CREATE POLICY "Users can view their own notifications"
+  ON notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert notifications"
+  ON notifications FOR INSERT
+  WITH CHECK (true);
+  
+CREATE POLICY "Users can update their own notifications"
+  ON notifications FOR UPDATE
+  USING (auth.uid() = user_id);
